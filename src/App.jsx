@@ -1,19 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Guitar from "./components/Guitar.jsx";
 import Header from "./components/Header.jsx";
 import { db } from "./data/db.js";
 
 function App() {
-    const [data, setData] = useState(db);
-    const [cart, setCart] = useState([]);
+    const initialCart = () => {
+        const localStorageCart = localStorage.getItem("cart");
+        return localStorageCart ? JSON.parse(localStorageCart) : [];
+    };
+
+    const [data] = useState(db);
+    const [cart, setCart] = useState(initialCart);
 
     const MAX_ITEMS = 5;
     const MIN_ITEMS = 1;
+
+    useEffect(() => {
+        localStorage.setItem("cart", JSON.stringify(cart));
+    }, [cart]);
 
     function addToCart(item) {
         const itemExists = cart.findIndex((guitar) => guitar.id === item.id);
 
         if (itemExists !== -1) {
+            if (cart[itemExists].quantity >= MAX_ITEMS) return;
             const updateCart = [...cart];
             updateCart[itemExists].quantity++;
             setCart(updateCart);
@@ -54,6 +64,10 @@ function App() {
         setCart(updateCart);
     }
 
+    function clearCart() {
+        setCart([]);
+    }
+
     return (
         <>
             <Header
@@ -61,6 +75,7 @@ function App() {
                 removeFromCart={removeFromCart}
                 increaseQuantity={increaseQuantity}
                 decreaseQuantity={decreaseQuantity}
+                clearCart={clearCart}
             />
 
             <main className="container-xl mt-5">
